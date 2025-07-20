@@ -10,7 +10,7 @@ import objects from "@/app/Texts/content.json";
 import Footer from "@/app/component/Home/Footer/page";
 import Commande from "@/app/component/Home/Farm/AddCommande/modal";
 import React from "react";
-
+import ProgressPage from "@/app/component/Proogression/page";
 const CheesePage = forwardRef(({ FarmData }, refCommande) => {
   const scrollerRef = useRef(null);
   const data = objects.Commande;
@@ -101,270 +101,283 @@ const CheesePage = forwardRef(({ FarmData }, refCommande) => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center py-0 px-0   overflow-hidden snap-y snap-mandatory">
-      {/* Hero Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 60 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 60 }} // <-- add this line
-        transition={{ duration: 0.8 }}
-        viewport={{ once: false, amount: 0.3 }}
-        className="w-full flex snap-center justify-center items-center px-4 py-10"
-      >
-        <Card className="w-full max-w-7xl bg-white shadow-2xl rounded-xl p-6 md:p-10 flex flex-col md:flex-row items-center gap-8">
-          <div className="flex-1 w-full">
-            <CardHeader className="p-0 mb-4">
-              <CardTitle className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-center md:text-left leading-tight mb-6">
-                {FarmData.hero.title}
+    <>
+      <ProgressPage isVisible={!heroImgLoaded} />
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center py-10 px-0   overflow-hidden snap-y snap-mandatory">
+        {/* Hero Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 60 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 60 }} // <-- add this line
+          transition={{ duration: 0.8 }}
+          viewport={{ once: false, amount: 0.3 }}
+          className="w-full flex snap-end justify-center items-center px-4 py-10"
+        >
+          <Card className="w-full max-w-7xl bg-white shadow-2xl rounded-xl p-6 md:p-10 flex flex-col md:flex-row items-center gap-8">
+            <div className="flex-1 w-full">
+              <CardHeader className="p-0 mb-4">
+                <CardTitle className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-center md:text-left leading-tight mb-6">
+                  {FarmData.hero.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <p className="text-gray-700 text-base sm:text-lg md:text-xl mb-6 text-justify whitespace-pre-line">
+                  {FarmData.hero.description}
+                </p>
+                <div className="flex justify-center md:justify-start">
+                  <Button
+                    onClick={scrollToCheeseVarieties} // 3. Add onClick here
+                    className="bg-green-700 hover:bg-green-800 text-white px-6 py-3 rounded-full shadow-md"
+                  >
+                    {FarmData.hero.button}
+                  </Button>
+                </div>
+              </CardContent>
+            </div>
+            <div className="flex-shrink-0 relative w-40 h-40 md:w-72 md:h-72">
+              {!heroImgLoaded && (
+                <Skeleton className="absolute inset-0 w-full h-full rounded-xl" />
+              )}
+              <Image
+                src={FarmData.hero.image.src}
+                alt={FarmData.hero.image.alt}
+                width={FarmData.hero.image.width}
+                height={FarmData.hero.image.height}
+                className={`w-40 h-40 md:w-72 md:h-72 object-cover rounded-xl shadow-lg transition-opacity duration-300 ${
+                  heroImgLoaded ? "opacity-100" : "opacity-0"
+                }`}
+                priority
+                onLoad={() => setHeroImgLoaded(true)}
+              />
+            </div>
+          </Card>
+        </motion.div>
+
+        {/* Cheese Varieties Section */}
+        <motion.div
+          ref={cheeseVarietiesRef}
+          initial={{ opacity: 0, y: 60 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 60 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          viewport={{ once: false, amount: 0.3 }}
+          className="w-full max-w-6xl snap-start min-h-screen p-4 sm:p-10 flex flex-col items-center justify-center"
+        >
+          <Card className="w-full shadow-lg min-h-[80vh] flex flex-col items-center bg-white p-4 sm:p-10">
+            <CardHeader>
+              <CardTitle className="text-3xl sm:text-4xl font-bold text-center">
+                Cheese Varieties
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-0">
-              <p className="text-gray-700 text-base sm:text-lg md:text-xl mb-6 text-justify whitespace-pre-line">
-                {FarmData.hero.description}
-              </p>
-              <div className="flex justify-center md:justify-start">
-                <Button
-                  onClick={scrollToCheeseVarieties} // 3. Add onClick here
-                  className="bg-green-700 hover:bg-green-800 text-white px-6 py-3 rounded-full shadow-md"
+
+            <div className="relative w-full">
+              {/* Left Scroll Button (desktop only) */}
+              <button
+                onClick={() => scrollByCard(-1)}
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white border border-gray-200 rounded-full shadow p-2 hidden md:block"
+              >
+                <svg
+                  width="28"
+                  height="28"
+                  stroke="currentColor"
+                  strokeWidth="2"
                 >
-                  {FarmData.hero.button}
-                </Button>
-              </div>
-            </CardContent>
-          </div>
-          <div className="flex-shrink-0 relative w-40 h-40 md:w-72 md:h-72">
-            {!heroImgLoaded && (
-              <Skeleton className="absolute inset-0 w-full h-full rounded-xl" />
-            )}
-            <Image
-              src={FarmData.hero.image.src}
-              alt={FarmData.hero.image.alt}
-              width={FarmData.hero.image.width}
-              height={FarmData.hero.image.height}
-              className={`w-40 h-40 md:w-72 md:h-72 object-cover rounded-xl shadow-lg transition-opacity duration-300 ${
-                heroImgLoaded ? "opacity-100" : "opacity-0"
-              }`}
-              priority
-              onLoad={() => setHeroImgLoaded(true)}
-            />
-          </div>
-        </Card>
-      </motion.div>
+                  <path d="M17 21l-6-7 6-7" />
+                </svg>
+              </button>
 
-      {/* Cheese Varieties Section */}
-      <motion.div
-        ref={cheeseVarietiesRef}
-        initial={{ opacity: 0, y: 60 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 60 }}
-        transition={{ duration: 0.8, delay: 0.2 }}
-        viewport={{ once: false, amount: 0.3 }}
-        className="w-full max-w-6xl snap-start min-h-screen p-4 sm:p-10 flex flex-col items-center justify-center"
-      >
-        <Card className="w-full shadow-lg min-h-[80vh] flex flex-col items-center bg-white p-4 sm:p-10">
-          <CardHeader>
-            <CardTitle className="text-3xl sm:text-4xl font-bold text-center">
-              Cheese Varieties
-            </CardTitle>
-          </CardHeader>
-
-          <div className="relative w-full">
-            {/* Left Scroll Button (desktop only) */}
-            <button
-              onClick={() => scrollByCard(-1)}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white border border-gray-200 rounded-full shadow p-2 hidden md:block"
-            >
-              <svg width="28" height="28" stroke="currentColor" strokeWidth="2">
-                <path d="M17 21l-6-7 6-7" />
-              </svg>
-            </button>
-
-            {/* Scrollable Product Cards */}
-            <div
-              ref={scrollerRef}
-              className="flex overflow-x-auto gap-4 sm:gap-6 md:gap-8 w-full pb-4 snap-x snap-mandatory px-1 sm:px-2"
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-            >
-              {loading ? (
-                [1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="product-card group snap-center min-w-[260px] sm:min-w-[300px] max-w-[350px] bg-gray-50 rounded-xl shadow-md flex flex-col items-center overflow-hidden"
-                  >
-                    <div className="w-full h-[220px] relative">
-                      <Skeleton className="w-full h-full" />
-                    </div>
-                    <CardContent className="p-4 text-center w-full">
-                      <Skeleton className="h-8 w-3/4 mb-2 mx-auto" />
-                      <Skeleton className="h-6 w-1/2 mx-auto" />
-                    </CardContent>
-                  </div>
-                ))
-              ) : products.length === 0 ? (
-                <div className="w-full text-center text-gray-400 py-16">
-                  No product found for this farm.
-                </div>
-              ) : (
-                products.map((product) => (
-                  <div
-                    key={product.title}
-                    className="product-card group snap-center min-w-[260px] sm:min-w-[300px] max-w-[350px] bg-gray-50 rounded-xl shadow-md flex flex-col items-center overflow-hidden"
-                  >
-                    <div className="w-full h-[220px] relative">
-                      {!imgLoadedMap[product.title] && (
-                        <Skeleton className="absolute inset-0 w-full h-full" />
-                      )}
-                      <Image
-                        src={product?.image}
-                        alt={product.image.alt}
-                        width={320}
-                        height={220}
-                        className={`object-cover w-full h-full transition-transform duration-300 group-hover:scale-110 transition-opacity duration-300 ${
-                          imgLoadedMap[product.title]
-                            ? "opacity-100"
-                            : "opacity-0"
-                        }`}
-                        onLoad={() =>
-                          setImgLoadedMap((prev) => ({
-                            ...prev,
-                            [product.title]: true,
-                          }))
-                        }
-                      />
-                      <div className="absolute inset-0 z-10 scale-110 bg-black/70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 px-4">
-                        <span className="text-white text-sm text-center z-20">
-                          {product.desc}
-                        </span>
+              {/* Scrollable Product Cards */}
+              <div
+                ref={scrollerRef}
+                className="flex overflow-x-auto gap-4 sm:gap-6 md:gap-8 w-full pb-4 snap-x snap-mandatory px-1 sm:px-2"
+                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+              >
+                {loading ? (
+                  [1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="product-card group snap-center min-w-[260px] sm:min-w-[300px] max-w-[350px] bg-gray-50 rounded-xl shadow-md flex flex-col items-center overflow-hidden"
+                    >
+                      <div className="w-full h-[220px] relative">
+                        <Skeleton className="w-full h-full" />
                       </div>
+                      <CardContent className="p-4 text-center w-full">
+                        <Skeleton className="h-8 w-3/4 mb-2 mx-auto" />
+                        <Skeleton className="h-6 w-1/2 mx-auto" />
+                      </CardContent>
                     </div>
-                    <CardContent className="p-4 text-center w-full">
-                      <h3 className="text-2xl font-bold mb-1">
-                        {product.title}
-                      </h3>
-                      <span className="text-green-700 font-semibold text-lg">
-                        {product.prix}
-                      </span>
-                    </CardContent>
+                  ))
+                ) : products.length === 0 ? (
+                  <div className="w-full text-center text-gray-400 py-16">
+                    No product found for this farm.
                   </div>
-                ))
-              )}
+                ) : (
+                  products.map((product) => (
+                    <div
+                      key={product.title}
+                      className="product-card group snap-center min-w-[260px] sm:min-w-[300px] max-w-[350px] bg-gray-50 rounded-xl shadow-md flex flex-col items-center overflow-hidden"
+                    >
+                      <div className="w-full h-[220px] relative">
+                        {!imgLoadedMap[product.title] && (
+                          <Skeleton className="absolute inset-0 w-full h-full" />
+                        )}
+                        <Image
+                          src={product?.image}
+                          alt={product.image.alt}
+                          width={320}
+                          height={220}
+                          className={`object-cover w-full h-full transition-transform duration-300 group-hover:scale-110 transition-opacity duration-300 ${
+                            imgLoadedMap[product.title]
+                              ? "opacity-100"
+                              : "opacity-0"
+                          }`}
+                          onLoad={() =>
+                            setImgLoadedMap((prev) => ({
+                              ...prev,
+                              [product.title]: true,
+                            }))
+                          }
+                        />
+                        <div className="absolute inset-0 z-10 scale-110 bg-black/70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 px-4">
+                          <span className="text-white text-sm text-center z-20">
+                            {product.desc}
+                          </span>
+                        </div>
+                      </div>
+                      <CardContent className="p-4 text-center w-full">
+                        <h3 className="text-2xl font-bold mb-1">
+                          {product.title}
+                        </h3>
+                        <span className="text-green-700 font-semibold text-lg">
+                          {product.prix}
+                        </span>
+                      </CardContent>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Right Scroll Button (desktop only) */}
+              <button
+                onClick={() => scrollByCard(1)}
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white border border-gray-200 rounded-full shadow p-2 hidden md:block"
+              >
+                <svg
+                  width="28"
+                  height="28"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M11 21l6-7-6-7" />
+                </svg>
+              </button>
             </div>
 
-            {/* Right Scroll Button (desktop only) */}
-            <button
-              onClick={() => scrollByCard(1)}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white border border-gray-200 rounded-full shadow p-2 hidden md:block"
-            >
-              <svg width="28" height="28" stroke="currentColor" strokeWidth="2">
-                <path d="M11 21l6-7-6-7" />
-              </svg>
-            </button>
-          </div>
+            {/* Scroll Hint (only on mobile) */}
+            <div className="mt-4 text-gray-400 text-sm block md:hidden text-center">
+              ← Swipe for more products →
+            </div>
+          </Card>
+        </motion.div>
 
-          {/* Scroll Hint (only on mobile) */}
-          <div className="mt-4 text-gray-400 text-sm block md:hidden text-center">
-            ← Swipe for more products →
-          </div>
-        </Card>
-      </motion.div>
-
-      {/* Catering Section */}
-      <motion.div
-        initial={{ opacity: 0, x: 80 }}
-        whileInView={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: 80 }} // <-- add this line
-        transition={{ duration: 0.8, delay: 0.2 }}
-        viewport={{ once: false, amount: 0.3 }}
-        className="w-full max-w-5xl snap-start min-h-screen flex items-center justify-center"
-      >
-        <Card className="shadow-lg min-h-[80vh] flex flex-col md:flex-row items-center bg-white p-10 w-full">
-          <div className="flex-1 p-8 order-2 md:order-1">
-            <CardHeader className="p-0 mb-4">
-              <CardTitle className="text-4xl font-bold mb-4">
-                {FarmData.catering.title}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <p className="text-gray-700 text-lg mb-6 whitespace-pre-line">
-                {FarmData.catering.description}
-              </p>
-            </CardContent>
-          </div>
-          <div className="flex-1 order-1 md:order-2 flex justify-center items-center relative">
-            {!cateringImgLoaded && (
-              <Skeleton className="absolute inset-0 w-full h-full rounded-lg" />
-            )}
-            <Image
-              src={FarmData.catering.image.src}
-              alt={FarmData.catering.image.alt}
-              width={FarmData.catering.image.width}
-              height={FarmData.catering.image.height}
-              className={`rounded-lg object-cover w-full h-full max-h-[70vh] transition-opacity duration-300 ${
-                cateringImgLoaded ? "opacity-100" : "opacity-0"
-              }`}
-              onLoad={() => setCateringImgLoaded(true)}
-            />
-          </div>
-        </Card>
-      </motion.div>
-
-      {/* Bungalow Section */}
-      <motion.div
-        initial={{ opacity: 0, x: -80 }}
-        whileInView={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -80 }} // <-- add this line
-        transition={{ duration: 0.8, delay: 0.2 }}
-        viewport={{ once: false, amount: 0.3 }}
-        className="w-full max-w-5xl snap-start min-h-screen flex items-center justify-center"
-      >
-        <Card className="shadow-lg min-h-[80vh] flex flex-col md:flex-row items-center bg-white p-10 w-full">
-          <div className="flex-1 order-2 md:order-1 flex justify-center items-center relative">
-            {!bungalowImgLoaded && (
-              <Skeleton className="absolute inset-0 w-full h-full rounded-lg" />
-            )}
-            <Image
-              src={FarmData.bungalow.image.src}
-              alt={FarmData.bungalow.image.alt}
-              width={FarmData.bungalow.image.width}
-              height={FarmData.bungalow.image.height}
-              className={`rounded-lg object-cover w-full h-full max-h-[70vh] transition-opacity duration-300 ${
-                bungalowImgLoaded ? "opacity-100" : "opacity-0"
-              }`}
-              onLoad={() => setBungalowImgLoaded(true)}
-            />
-          </div>
-          <div className="flex-1 p-8 order-1 md:order-2">
-            <CardHeader className="p-0 mb-4">
-              <CardTitle className="text-4xl font-bold mb-4">
-                {FarmData.bungalow.title}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <p className="text-gray-700 text-lg mb-6 whitespace-pre-line">
-                {FarmData.bungalow.description}
-              </p>
-            </CardContent>
-          </div>
-        </Card>
-      </motion.div>
-
-      {/* Commande Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 100 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 100 }} // <-- add this line
-        transition={{ duration: 0.8, delay: 0.2 }}
-        viewport={{ once: false, amount: 0.3 }}
-        className="w-full max-w-5xl snap-start min-h-screen flex items-center justify-center"
-      >
-        <div
-          ref={refCommande}
-          className="scroll-mt-34" // Tailwind utility
+        {/* Catering Section */}
+        <motion.div
+          initial={{ opacity: 0, x: 80 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: 80 }} // <-- add this line
+          transition={{ duration: 0.8, delay: 0.2 }}
+          viewport={{ once: false, amount: 0.3 }}
+          className="w-full max-w-5xl snap-start min-h-screen flex items-center justify-center"
         >
-          <Commande data={data} FarmProduct={products} />
-        </div>
-      </motion.div>
-    </div>
+          <Card className="shadow-lg min-h-[80vh] flex flex-col md:flex-row items-center bg-white p-10 w-full">
+            <div className="flex-1 p-8 order-2 md:order-1">
+              <CardHeader className="p-0 mb-4">
+                <CardTitle className="text-4xl font-bold mb-4">
+                  {FarmData.catering.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <p className="text-gray-700 text-lg mb-6 whitespace-pre-line">
+                  {FarmData.catering.description}
+                </p>
+              </CardContent>
+            </div>
+            <div className="flex-1 order-1 md:order-2 flex justify-center items-center relative">
+              {!cateringImgLoaded && (
+                <Skeleton className="absolute inset-0 w-full h-full rounded-lg" />
+              )}
+              <Image
+                src={FarmData.catering.image.src}
+                alt={FarmData.catering.image.alt}
+                width={FarmData.catering.image.width}
+                height={FarmData.catering.image.height}
+                className={`rounded-lg object-cover w-full h-full max-h-[70vh] transition-opacity duration-300 ${
+                  cateringImgLoaded ? "opacity-100" : "opacity-0"
+                }`}
+                onLoad={() => setCateringImgLoaded(true)}
+              />
+            </div>
+          </Card>
+        </motion.div>
+
+        {/* Bungalow Section */}
+        <motion.div
+          initial={{ opacity: 0, x: -80 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -80 }} // <-- add this line
+          transition={{ duration: 0.8, delay: 0.2 }}
+          viewport={{ once: false, amount: 0.3 }}
+          className="w-full max-w-5xl snap-start min-h-screen flex items-center justify-center"
+        >
+          <Card className="shadow-lg min-h-[80vh] flex flex-col md:flex-row items-center bg-white p-10 w-full">
+            <div className="flex-1 order-2 md:order-1 flex justify-center items-center relative">
+              {!bungalowImgLoaded && (
+                <Skeleton className="absolute inset-0 w-full h-full rounded-lg" />
+              )}
+              <Image
+                src={FarmData.bungalow.image.src}
+                alt={FarmData.bungalow.image.alt}
+                width={FarmData.bungalow.image.width}
+                height={FarmData.bungalow.image.height}
+                className={`rounded-lg object-cover w-full h-full max-h-[70vh] transition-opacity duration-300 ${
+                  bungalowImgLoaded ? "opacity-100" : "opacity-0"
+                }`}
+                onLoad={() => setBungalowImgLoaded(true)}
+              />
+            </div>
+            <div className="flex-1 p-8 order-1 md:order-2">
+              <CardHeader className="p-0 mb-4">
+                <CardTitle className="text-4xl font-bold mb-4">
+                  {FarmData.bungalow.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <p className="text-gray-700 text-lg mb-6 whitespace-pre-line">
+                  {FarmData.bungalow.description}
+                </p>
+              </CardContent>
+            </div>
+          </Card>
+        </motion.div>
+
+        {/* Commande Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 100 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 100 }} // <-- add this line
+          transition={{ duration: 0.8, delay: 0.2 }}
+          viewport={{ once: false, amount: 0.3 }}
+          className="w-full max-w-5xl snap-center min-h-screen flex items-center justify-center"
+        >
+          <div
+            ref={refCommande}
+            className="scroll-mt-34" // Tailwind utility
+          >
+            <Commande data={data} FarmProduct={products} />
+          </div>
+        </motion.div>
+      </div>
+    </>
   );
 });
 

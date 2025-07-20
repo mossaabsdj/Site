@@ -14,12 +14,15 @@ import FarmsDiscover from "@/app/component/Home/newpage/newpage";
 export default function Home() {
   const [selectedFarm, setSelectedFarm] = useState("Home");
   const [displayFarm, setdisplayFarm] = useState(false);
+  const [prevfarm, setprevfarm] = useState("");
   const [FarmData, setFarmData] = useState([]);
   const [DashBoard, setDashBoard] = useState(false);
   const refCommande = useRef(null);
   const refDiscoverPAge = useRef(null);
   const scrollOrder = () => {
-    refCommande.current?.scrollIntoView({ behavior: "smooth" });
+    if (refCommande.current) {
+      refCommande.current.scrollIntoView({ behavior: "smooth" });
+    }
   };
   const scrolDiscoverpage = () => {
     refDiscoverPAge.current?.scrollIntoView({ behavior: "smooth" });
@@ -38,11 +41,7 @@ export default function Home() {
   }, [selectedFarm]);
 
   const handleSelection = (farm) => {
-    if (farm === "order") {
-      console.log("order");
-      scrollOrder();
-      setSelectedFarm((prev) => prev);
-    } else if (farm === "Home") {
+    if (farm === "Home") {
       setdisplayFarm(false);
     } else if (farm === "traditional cheese") {
       setFarmData(objects.Farms.TraditionalCheese);
@@ -79,6 +78,7 @@ export default function Home() {
         <>
           <Header
             select={setSelectedFarm}
+            scroletoorder={scrollOrder}
             selected_from_DescoverPage={selectedFarm}
           />
           {displayFarm ? (

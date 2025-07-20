@@ -42,7 +42,11 @@ const TEXTS = {
   Admin: "admin",
 };
 
-export default function AppNavbar({ select, selected_from_DescoverPage }) {
+export default function AppNavbar({
+  select,
+  scroletoorder,
+  selected_from_DescoverPage,
+}) {
   const [open, setOpen] = React.useState(false);
   const { data: session, status } = useSession();
   const [SelectedItem, setselecteditem] = React.useState("Home");
@@ -97,7 +101,8 @@ export default function AppNavbar({ select, selected_from_DescoverPage }) {
                   <motion.button
                     onClick={() => {
                       if (item === "order") {
-                        select(item);
+                        console.log("clicked");
+                        scroletoorder();
                       } else {
                         select(item);
 
@@ -196,10 +201,15 @@ export default function AppNavbar({ select, selected_from_DescoverPage }) {
                     <motion.button
                       key={item}
                       onClick={() => {
-                        setOpen(false);
-                        select(item);
+                        if (item === "order") {
+                          scroletoorder();
+                          setOpen(false);
+                        } else {
+                          setOpen(false);
+                          select(item);
 
-                        setselecteditem(item);
+                          setselecteditem(item);
+                        }
                       }}
                       whileTap={{ scale: 0.97 }}
                       animate={
