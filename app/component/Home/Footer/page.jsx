@@ -11,8 +11,8 @@ import Image from "next/image";
 // === Text Variables ===
 const companyName = "Ski agrotour luxe";
 const companyDescription = "Business Agro touristique.";
-const address = "----,--------------";
-const phoneNumber = "+1 (555) 123-4567";
+const address = "Skikda/Algerie";
+const phoneNumber = "+213 559528292";
 const email = "Skiagrotourdeluxe10@gmail.com";
 
 const companyLinks = [
