@@ -249,7 +249,7 @@ const CheesePage = forwardRef(({ FarmData }, refCommande) => {
                           {product.title}
                         </h3>
                         <span className="text-green-700 font-semibold text-lg">
-                          {product.prix}
+                          {product.prix} DA
                         </span>
                       </CardContent>
                     </div>

@@ -194,7 +194,7 @@ export default function HomePage() {
                       <h2 className="text-lg font-semibold text-gray-800">
                         {product.title}
                       </h2>
-                      <p className="text-gray-500">${product.prix}</p>
+                      <p className="text-gray-500">{product.prix} DA</p>
                     </div>
                   </motion.div>
                 ))}
