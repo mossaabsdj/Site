@@ -15,18 +15,12 @@ const address = "Skikda/Algerie";
 const phoneNumber = "+213 559528292";
 const email = "Skiagrotourdeluxe10@gmail.com";
 
-const companyLinks = [
-  { name: "About Us", href: "#" },
-  { name: "Careers", href: "#" },
-  { name: "Blog", href: "#" },
-  { name: "Press", href: "#" },
-];
+const companyLinks = [{ name: "About Us", href: "aboutus" }];
 
 const supportLinks = [
-  { name: "Help Center", href: "#" },
-  { name: "Contact Us", href: "#" },
-  { name: "Privacy Policy", href: "#" },
-  { name: "Terms & Conditions", href: "#" },
+  { name: "Help Center", href: "HelpCenter" },
+  { name: "Privacy Policy", href: "Privacy&Policy" },
+  { name: "Terms & Conditions", href: "Terms&conditions" },
 ];
 
 const footerNote = `© ${new Date().getFullYear()} ${companyName}. All rights reserved.`;
@@ -78,7 +72,7 @@ export default function Footer() {
           <ul className={`space-y-2 ${secondaryTextColor}`}>
             {companyLinks.map((link) => (
               <li key={link.name}>
-                <a href={""} className={`${linkHoverColor} transition`}>
+                <a href={"/aboutus"} className={`${linkHoverColor} transition`}>
                   {link.name}
                 </a>
               </li>
@@ -96,7 +90,7 @@ export default function Footer() {
           <ul className={`space-y-2 ${secondaryTextColor}`}>
             {supportLinks.map((link) => (
               <li key={link.name}>
-                <a href={""} className={`${linkHoverColor} transition`}>
+                <a href={link.href} className={`${linkHoverColor} transition`}>
                   {link.name}
                 </a>
               </li>

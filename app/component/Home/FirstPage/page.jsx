@@ -18,7 +18,7 @@ export default function TaxLawyerLandingPage({ scroleDiscover }) {
           transition={{ duration: 0.7 }}
           viewport={{ once: false, amount: 0.3 }}
         >
-          <span className="uppercase tracking-widest text-sm text-gray-600">
+          <span className="uppercase tracking-widest text-3xl font-semibold  text-gray-600">
             {firstPage.badge}
           </span>
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 leading-tight">

@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
-import { User, LogOut } from "lucide-react"; // Icons
+import { User, LogOut, Menu, X } from "lucide-react";
 import Progression from "@/app/component/Proogression/page";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -22,8 +22,7 @@ import {
   NavigationMenuItem,
   NavigationMenuList,
 } from "@/components/ui/navigation-menu";
-import { useSession, signOut, signIn } from "next-auth/react";
-import { set } from "date-fns";
+import { useSession, signOut } from "next-auth/react";
 
 const TEXTS = {
   brandName: "Ski agrotour luxe",
@@ -64,48 +63,54 @@ export default function AppNavbar({
     }).then((result) => {
       if (result.isConfirmed) {
         setIsLoading(true);
-
         signOut({ callbackUrl: "/" });
         setIsLoading(false);
       }
     });
   };
+
   React.useEffect(() => {
-    if (selected_from_DescoverPage != "order") {
+    if (selected_from_DescoverPage !== "order") {
       setselecteditem(selected_from_DescoverPage);
     }
   }, [selected_from_DescoverPage]);
+
   return (
     <>
       {isLoading && <Progression isVisible={true} />}
 
-      <header className="bg-white text-black shadow-sm px-6 py-4 z-50 ">
-        <div className="flex items-center justify-between">
+      <header className="bg-white text-black shadow-sm px-4 sm:px-6 lg:px-8 py-3 sm:py-4 z-50 w-full">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+          className="flex flex-wrap items-center justify-between gap-4"
+        >
           {/* Logo and Brand */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             <Image
               src="/images/logo.png"
-              alt="ACME Logo"
-              width={42}
-              height={42}
+              alt="Logo"
+              width={40}
+              height={40}
               className="bg-black rounded-lg shadow-md"
             />
-            <span className="text-lg font-bold">{TEXTS.brandName}</span>
+            <span className="text-base sm:text-lg md:text-xl font-bold">
+              {TEXTS.brandName}
+            </span>
           </div>
 
           {/* Desktop Nav */}
-          <NavigationMenu className="hidden sm:flex">
-            <NavigationMenuList className="flex gap-6">
+          <NavigationMenu className="hidden lg:flex">
+            <NavigationMenuList className="flex gap-4 xl:gap-6">
               {TEXTS.navItems.map((item) => (
                 <NavigationMenuItem key={item}>
                   <motion.button
                     onClick={() => {
                       if (item === "order") {
-                        console.log("clicked");
                         scroletoorder();
                       } else {
                         select(item);
-
                         setselecteditem(item);
                       }
                     }}
@@ -115,8 +120,8 @@ export default function AppNavbar({
                     }
                     className={`text-sm font-medium transition ${
                       SelectedItem === item && SelectedItem !== "order"
-                        ? "text-white bg-black font-bold rounded-2xl p-2 h-9"
-                        : "text-black"
+                        ? "text-white bg-black font-bold rounded-2xl px-3 py-1.5"
+                        : "text-black hover:text-gray-600"
                     }`}
                   >
                     {item}
@@ -126,8 +131,8 @@ export default function AppNavbar({
             </NavigationMenuList>
           </NavigationMenu>
 
-          {/* Desktop Login */}
-          <div className="hidden sm:flex flex-col gap-2 items-end">
+          {/* Desktop Login / Admin */}
+          <div className="hidden lg:flex flex-col gap-2 items-end">
             {status === "loading" ? (
               <div className="w-24 h-8 bg-gray-200 rounded animate-pulse" />
             ) : session ? (
@@ -137,7 +142,7 @@ export default function AppNavbar({
                     variant="outline"
                     className="font-semibold bg-black text-white hover:bg-gray-700 transition"
                   >
-                    {"Admin"}
+                    Admin
                   </Button>
                 </DropdownMenuTrigger>
 
@@ -147,8 +152,7 @@ export default function AppNavbar({
                 >
                   <DropdownMenuItem
                     onClick={() => {
-                      setIsLoading(true); // Start loading
-
+                      setIsLoading(true);
                       select("admin");
                       setselecteditem("admin");
                     }}
@@ -175,27 +179,30 @@ export default function AppNavbar({
                 variant="default"
                 className="bg-black hover:bg-gray-700"
               >
-                <Link
-                  onClick={() => {
-                    setIsLoading(true);
-                  }}
-                  href="/Login"
-                >
+                <Link onClick={() => setIsLoading(true)} href="/Login">
                   {TEXTS.login}
                 </Link>
               </Button>
             )}
           </div>
 
-          {/* Mobile Menu Trigger */}
-          <div className="sm:hidden">
+          {/* Mobile Menu */}
+          <div className="lg:hidden">
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
-                <Button variant="outline" size="icon">
-                  {open ? "✕" : "≡"}
+                <Button variant="outline" size="icon" aria-label="Toggle menu">
+                  {open ? (
+                    <X className="w-5 h-5" />
+                  ) : (
+                    <Menu className="w-5 h-5" />
+                  )}
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[70%] p-6">
+
+              <SheetContent
+                side="left"
+                className="w-[80%] sm:w-[60%] p-6 bg-white"
+              >
                 <div className="space-y-4">
                   {TEXTS.navItems.map((item) => (
                     <motion.button
@@ -203,22 +210,20 @@ export default function AppNavbar({
                       onClick={() => {
                         if (item === "order") {
                           scroletoorder();
-                          setOpen(false);
                         } else {
-                          setOpen(false);
                           select(item);
-
                           setselecteditem(item);
                         }
+                        setOpen(false);
                       }}
                       whileTap={{ scale: 0.97 }}
                       animate={
                         SelectedItem === item ? { scale: 1.05 } : { scale: 1 }
                       }
                       className={`block w-full text-left px-3 py-2 rounded-md text-sm font-medium transition ${
-                        SelectedItem === item && SelectedItem != "order"
+                        SelectedItem === item && SelectedItem !== "order"
                           ? "text-white bg-black font-bold"
-                          : "text-black bg-transparent"
+                          : "text-black bg-transparent hover:bg-gray-100"
                       }`}
                     >
                       {item}
@@ -231,8 +236,7 @@ export default function AppNavbar({
                     <>
                       <Button
                         onClick={() => {
-                          setIsLoading(true); // Start loading
-
+                          setIsLoading(true);
                           select("admin");
                           setselecteditem("admin");
                         }}
@@ -242,8 +246,8 @@ export default function AppNavbar({
                       </Button>
                       <Button
                         onClick={() => {
-                          setOpen(false);
                           handleLogout();
+                          setOpen(false);
                         }}
                         className="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 mt-2"
                       >
@@ -257,12 +261,7 @@ export default function AppNavbar({
                       className="w-full bg-black hover:bg-gray-700 mt-2"
                       onClick={() => setOpen(false)}
                     >
-                      <Link
-                        onClick={() => {
-                          setIsLoading(true);
-                        }}
-                        href="/Login"
-                      >
+                      <Link onClick={() => setIsLoading(true)} href="/Login">
                         {TEXTS.login}
                       </Link>
                     </Button>
@@ -271,7 +270,7 @@ export default function AppNavbar({
               </SheetContent>
             </Sheet>
           </div>
-        </div>
+        </motion.div>
       </header>
     </>
   );
