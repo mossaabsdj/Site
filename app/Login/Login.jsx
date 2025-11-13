@@ -69,7 +69,7 @@ export default function FlipAuthPages() {
   const [isFlipped, setIsFlipped] = useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
 
-  const [loginData, setLoginData] = useState({ username: "", password: "" });
+  const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [registerData, setRegisterData] = useState({
     fullName: "",
     email: "",
@@ -84,7 +84,19 @@ export default function FlipAuthPages() {
   };
 
   const handleRegisterChange = (field) => (e) => {
-    const value = e.target.value;
+    let value = e.target.value;
+    if (field === "phone") {
+      // ✅ Allow only digits and plus sign
+      value = value.replace(/[^\d+]/g, ""); // remove everything except digits and +
+
+      // ✅ Only allow one "+" and only at the beginning
+      if (value.includes("+")) {
+        value = "+" + value.replace(/\+/g, ""); // keep + only at start
+      }
+
+      // ✅ Optional: limit total length (e.g., 13 characters for +countrycode)
+      if (value.length > 13) value = value.slice(0, 13);
+    }
     setRegisterData((prev) => {
       const updated = { ...prev, [field]: value };
 
@@ -99,11 +111,12 @@ export default function FlipAuthPages() {
       return updated;
     });
   };
-  const handleSubmit = async (e) => {
+  const handleLoginSubmit = async (e) => {
     setIsLoading(true);
     e.preventDefault();
+    const { email, password } = loginData;
     const res = await signIn("credentials", {
-      username,
+      email,
       password,
       redirect: false,
       callbackUrl: "/DashBoard",
@@ -129,7 +142,7 @@ export default function FlipAuthPages() {
       Swal.fire({
         icon: "error",
         title: "Login Failed",
-        text: "Invalid username or password.",
+        text: "Invalid email or password.",
         confirmButtonColor: "#d32f2f", // red confirm button
         customClass: {
           popup: "shadow-lg rounded-lg", // optional for soft edges and shadow
@@ -138,16 +151,120 @@ export default function FlipAuthPages() {
     }
   };
 
-  const handleLoginSubmit = (e) => {
+  const handleRegisterSubmit = async (e) => {
     e.preventDefault();
-    console.log("Login:", loginData);
-    alert("Login submitted! Check console for data.");
-  };
+    const { fullName, email, phone, country, password, confirmPassword } =
+      registerData;
 
-  const handleRegisterSubmit = (e) => {
-    e.preventDefault();
-    console.log("Register:", registerData);
-    alert("Registration submitted! Check console for data.");
+    // ✅ 1. Check for empty fields
+    if (
+      !fullName ||
+      !email ||
+      !phone ||
+      !country ||
+      !password ||
+      !confirmPassword
+    ) {
+      Swal.fire({
+        icon: "warning",
+        title: "Missing Fields",
+        text: "Please fill in all required fields.",
+        confirmButtonColor: "#f39c12",
+      });
+      return;
+    }
+
+    // ✅ 2. Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Swal.fire({
+        icon: "error",
+        title: "Invalid Email",
+        text: "Please enter a valid email address.",
+      });
+      return;
+    }
+
+    // ✅ 3. Validate phone number (digits only, optional +)
+    const phoneRegex = /^\+?\d{8,13}$/;
+    if (!phoneRegex.test(phone)) {
+      Swal.fire({
+        icon: "error",
+        title: "Invalid Phone Number",
+        text: "Phone number must contain only digits (and an optional +), between 8 and 13 digits.",
+      });
+      return;
+    }
+
+    // ✅ 4. Validate password length
+    if (password.length < 8) {
+      Swal.fire({
+        icon: "error",
+        title: "Weak Password",
+        text: "Password must be at least 8 characters long.",
+      });
+      return;
+    }
+
+    // ✅ 5. Validate password match
+    if (password !== confirmPassword) {
+      Swal.fire({
+        icon: "error",
+        title: "Passwords Do Not Match",
+        text: "Please make sure both passwords are identical.",
+      });
+      return;
+    }
+    setIsLoading(true);
+
+    const res = await fetch("/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(registerData), // contains fullName, email, phone, country, password, confirmPassword
+    });
+
+    const data = await res.json();
+    setIsLoading(false);
+
+    if (res.ok) {
+      // ✅ Registration success
+      Swal.fire({
+        icon: "success",
+        title: "Registration Successful",
+        showConfirmButton: false,
+        customClass: { popup: "shadow-lg rounded-lg" },
+        timer: 1500,
+      }).then(async () => {
+        setIsLoading(true);
+
+        // 🔐 Automatically sign in using NextAuth
+        const loginRes = await signIn("credentials", {
+          username: registerData.email, // use same field as login
+          password: registerData.password,
+          redirect: false,
+          callbackUrl: "/DashBoard",
+        });
+
+        if (loginRes?.ok) {
+          window.location.href = loginRes.url;
+        } else {
+          Swal.fire({
+            icon: "warning",
+            title: "Account created, but login failed",
+            text: "Please try logging in manually.",
+          });
+        }
+      });
+    } else {
+      // ❌ Registration failed
+      Swal.fire({
+        icon: "error",
+        title: "Registration Failed",
+        text: data.message,
+        confirmButtonColor: "#d32f2f",
+        customClass: { popup: "shadow-lg rounded-lg" },
+      });
+    }
   };
 
   return (
@@ -185,10 +302,10 @@ export default function FlipAuthPages() {
 
                     <div className="w-full flex flex-col space-y-4">
                       <FormInput
-                        type="text"
-                        placeholder="Username"
-                        value={loginData.username}
-                        onChange={handleLoginChange("username")}
+                        type="email"
+                        placeholder="Email"
+                        value={loginData.email}
+                        onChange={handleLoginChange("email")}
                         className="w-full"
                       />
 
@@ -298,6 +415,7 @@ export default function FlipAuthPages() {
                           value={registerData.phone}
                           onChange={handleRegisterChange("phone")}
                           className="w-full"
+                          maxLength={12} // 👈 limits input to 10 characters
                         />
 
                         <FormInput

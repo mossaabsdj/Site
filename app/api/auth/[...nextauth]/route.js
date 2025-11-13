@@ -1,7 +1,7 @@
-// app/api/auth/[...nextauth]/route.js
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
@@ -10,25 +10,41 @@ export const authOptions = {
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        username: { label: "Username", type: "text" },
+        email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials.username || !credentials.password) {
-          return null;
+        // ✅ 1. Ensure both fields exist
+        if (!credentials.email || !credentials.password) {
+          throw new Error("Please enter both email and password.");
         }
 
-        const admin = await prisma.admin.findFirst({
-          where: {
-            User: credentials.username,
-            Password: credentials.password,
-          },
+        // ✅ 2. Find user by email (not by username)
+        const user = await prisma.Compte.findUnique({
+          where: { email: credentials.email },
         });
 
-        if (admin) {
-          return { id: admin.id, name: admin.User, email: "" };
+        if (!user) {
+          throw new Error("No account found with this email.");
         }
-        return null;
+
+        // ✅ 3. Compare entered password with stored hashed password
+        const isValid = await bcrypt.compare(
+          credentials.password,
+          user.Password
+        );
+
+        if (!isValid) {
+          throw new Error("Invalid password.");
+        }
+
+        // ✅ 4. Return user data for session
+        return {
+          id: user.id,
+          name: user.fullName || user.User,
+          email: user.email,
+          role: user.role || "CLIENT",
+        };
       },
     }),
   ],
@@ -39,5 +55,4 @@ export const authOptions = {
 };
 
 const handler = NextAuth(authOptions);
-
 export { handler as GET, handler as POST };

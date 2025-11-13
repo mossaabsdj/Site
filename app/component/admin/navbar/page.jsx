@@ -21,6 +21,9 @@ const TEXTS = {
     { label: "Products", href: "/admin/products" },
     { label: "Commandes", href: "/admin/commande" },
     { label: "Farms", href: "/admin/farms" },
+    { label: "Users", href: "/admin/Users" },
+    { label: "Client", href: "/admin/Users" },
+
     { label: "Paramètre", href: "/admin/parametre" },
   ],
   login: "Login",
