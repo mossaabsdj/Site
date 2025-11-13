@@ -14,13 +14,11 @@ export const authOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        // ✅ 1. Ensure both fields exist
         if (!credentials.email || !credentials.password) {
           throw new Error("Please enter both email and password.");
         }
 
-        // ✅ 2. Find user by email (not by username)
-        const user = await prisma.Compte.findUnique({
+        const user = await prisma.compte.findUnique({
           where: { email: credentials.email },
         });
 
@@ -28,7 +26,6 @@ export const authOptions = {
           throw new Error("No account found with this email.");
         }
 
-        // ✅ 3. Compare entered password with stored hashed password
         const isValid = await bcrypt.compare(
           credentials.password,
           user.Password
@@ -38,7 +35,6 @@ export const authOptions = {
           throw new Error("Invalid password.");
         }
 
-        // ✅ 4. Return user data for session
         return {
           id: user.id,
           name: user.fullName || user.User,
@@ -48,10 +44,29 @@ export const authOptions = {
       },
     }),
   ],
+
   pages: {
     signIn: "/Login",
   },
+
   secret: process.env.NEXTAUTH_SECRET,
+
+  // 🔥 Add callbacks here
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.role = user.role;
+      }
+      return token;
+    },
+
+    async session({ session, token }) {
+      session.user.id = token.id;
+      session.user.role = token.role;
+      return session;
+    },
+  },
 };
 
 const handler = NextAuth(authOptions);

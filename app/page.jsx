@@ -96,11 +96,7 @@ export default function Home() {
                 exit={{ opacity: 0, y: 100 }} // <-- add this line
                 transition={{ duration: 0.8, delay: 0.2 }}
                 viewport={{ once: false, amount: 0.3 }}
-              >
-                <div ref={refCommande} className="p-10">
-                  <Commande data={objects.Commande} />
-                </div>
-              </motion.div>
+              ></motion.div>
             </>
           )}
           <Footer />

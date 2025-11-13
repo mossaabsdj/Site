@@ -17,7 +17,6 @@ import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { fetchData } from "@/lib/FetchData/page";
 import LoadingPage from "@/app/component/loading/page";
-
 export default function CommandeStats({ Display, onClose }) {
   const [totalOrders, setTotalOrders] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -28,7 +27,7 @@ export default function CommandeStats({ Display, onClose }) {
     const data = await fetchData({ method: "GET", url: "/api/Commande/stats" });
     setTotalOrders(data.totalCommandes);
     setOrdersByProduct(data.commandesWithTitles);
-    setOrdersByRegion(data.commandesByRegion);
+    setOrdersByRegion(data.commandesByCountry);
   };
 
   useEffect(() => {

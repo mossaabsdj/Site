@@ -43,6 +43,9 @@ export default function CompteParamPage() {
       try {
         setLoading(true);
         const email = session?.user.email;
+        if (!email) {
+          return;
+        }
         const res = await fetch(
           `/api/compte?email=${encodeURIComponent(email)}`
         );

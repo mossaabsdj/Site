@@ -330,55 +330,96 @@ const Page = ({ objects, data, AddModel, ViewModel }) => {
                 </TableHeader>
                 <TableBody>
                   {sortedData?.map((row) => (
-                    <TableRow
-                      key={row.id}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
+                    <TableRow key={row.id} className="hover:bg-gray-50">
                       <TableCell className="px-3 py-2">{row.id}</TableCell>
-                      {columns?.map((col) => (
-                        <TableCell
-                          key={col.accessor}
-                          className="px-3 py-2 align-middle"
-                        >
-                          {col.accessor.toLowerCase().includes("date") ? (
-                            format(new Date(row[col.accessor]), "yyyy-MM-dd")
-                          ) : col.accessor === "status" ? (
-                            <span
-                              className={`font-semibold ${
-                                row.status === true
-                                  ? "text-green-600"
-                                  : row.status === false
-                                  ? "text-red-600"
-                                  : "text-gray-500"
-                              }`}
-                            >
-                              {row[col.accessor] === true
-                                ? "valider"
-                                : row[col.accessor] === false
-                                ? "rejeter"
-                                : "waiting"}
-                            </span>
-                          ) : col.accessor === "productId" && row.product ? (
-                            row.product.title
-                          ) : (
-                            row[col.accessor]
-                          )}
-                        </TableCell>
-                      ))}
+
+                      {columns.map((col) => {
+                        const acc = col.accessor;
+                        let value = row[acc];
+
+                        // 👇 Adaptation des champs selon ton JSON réel
+                        switch (acc) {
+                          case "nom":
+                            value = row.compte?.fullName
+                              ? row.compte.fullName.split(" ")[0]
+                              : "-";
+                            break;
+
+                          case "prenom":
+                            value = row.compte?.fullName
+                              ? row.compte.fullName
+                                  .split(" ")
+                                  .slice(1)
+                                  .join(" ")
+                              : "-";
+                            break;
+
+                          case "region":
+                            value = row.compte?.country || "-"; // Pas dans tes données
+                            break;
+
+                          case "mail":
+                            value = row.compte?.email || "-";
+                            break;
+
+                          case "num":
+                            value = row.compte?.phone || "-";
+                            break;
+
+                          case "productId":
+                            value = row.product?.title || "-";
+                            break;
+
+                          case "Date":
+                            value = row.Date
+                              ? format(new Date(row.Date), "yyyy-MM-dd")
+                              : "-";
+                            break;
+
+                          case "status":
+                            return (
+                              <TableCell key={acc} className="px-3 py-2">
+                                <span
+                                  className={`font-semibold ${
+                                    row.status === true
+                                      ? "text-green-600"
+                                      : row.status === false
+                                      ? "text-red-600"
+                                      : "text-gray-500"
+                                  }`}
+                                >
+                                  {row.status === true
+                                    ? "valider"
+                                    : row.status === false
+                                    ? "rejeter"
+                                    : "waiting"}
+                                </span>
+                              </TableCell>
+                            );
+                        }
+
+                        return (
+                          <TableCell key={acc} className="px-3 py-2">
+                            {value ?? "-"}
+                          </TableCell>
+                        );
+                      })}
+
+                      {/* 👉 Actions */}
                       <TableCell className="px-3 py-2 text-right space-x-2">
                         {row.status === null ? (
                           <>
                             <Button
-                              variant="default"
                               size="sm"
                               className="bg-green-600 hover:bg-green-700 text-white"
                               onClick={() => handleValider(row)}
                             >
                               {Labels.Valider}
                             </Button>
+
                             <Button
-                              variant="destructive"
                               size="sm"
+                              variant="destructive"
                               onClick={() => handleRejeter(row)}
                             >
                               {Labels.rejeter}
@@ -386,17 +427,17 @@ const Page = ({ objects, data, AddModel, ViewModel }) => {
                           </>
                         ) : (
                           <Button
-                            variant="outline"
                             size="sm"
-                            className="text-gray-600 border-gray-400 hover:bg-gray-100"
+                            variant="outline"
                             onClick={() => handleReverifie(row)}
                           >
                             {Labels.Re_vérifier}
                           </Button>
                         )}
+
                         <Button
-                          variant="destructive"
                           size="sm"
+                          variant="destructive"
                           className="p-2"
                           onClick={() => {
                             setSelectedDeleteId(row.id);

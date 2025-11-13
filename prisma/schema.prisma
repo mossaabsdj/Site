@@ -21,18 +21,7 @@ model Product {
   Date  DateTime    @default(now())
   emballages Emballage[] // 1 Product → many Emballages
 }
-model Commande {
-  id         Int      @id @default(autoincrement())
-  emballage  String
-  adresse    String
-  quantite   Int
-  product    Product  @relation(fields: [productId], references: [id])
-  productId  Int
-    compte      Compte     @relation(fields: [compteId], references: [id])
-  compteId    Int
-status Boolean? 
-  Date  DateTime @default(now())
-}
+
 
 
 
@@ -72,4 +61,15 @@ model Emballage {
   product   Product  @relation(fields: [productId], references: [id]) // Many Emballages → 1 Product
 }
 
-
+model Commande {
+  id         Int      @id @default(autoincrement())
+  emballage  String
+  adresse    String
+  quantite   Int
+  product    Product  @relation(fields: [productId], references: [id])
+  productId  Int
+    compte      Compte     @relation(fields: [compteId], references: [id])
+  compteId    Int
+status Boolean? 
+  Date  DateTime @default(now())
+}

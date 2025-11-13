@@ -1,259 +1,284 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
-import object from "@/app/Texts/content.json";
-import { fetchData } from "@/lib/FetchData/page"; // Adjust path if needed
 import LoadingPage from "@/app/component/loading/page";
+import { fetchData } from "@/lib/FetchData/page";
+import { useSession } from "next-auth/react";
 
-const AddModal = ({ open, onClose, data = {}, loadData }) => {
-  const FirstFields = data?.AddClient?.FirstFields ?? [];
-  const Title = data?.AddClient?.Title ?? "";
+export default function AddModal({ open, onClose, loadData }) {
+  const [isLoading, setLoading] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [clients, setClients] = useState([]);
+  const { data: session } = useSession(); // ✅ get session from NextAuth
 
-  const labels = object.Labels;
-  const [isloading, setloading] = useState(false);
-  const [prods, setProds] = useState([]);
-  const [values, setValues] = useState({});
-  const [emballages, setemballages] = useState([]);
-  const [prod, setprod] = useState();
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
-  // Fetch products on mount
+  const [values, setValues] = useState({
+    compteId: "",
+    productId: "",
+    adresse: "",
+    emballage: "",
+    quantite: 1,
+    total: 0,
+    status: null,
+  });
+
+  /** LOAD PRODUCTS + CLIENTS **/
   useEffect(() => {
-    const fetchProducts = async () => {
-      setloading(true);
-      const products = await fetchData({ method: "GET", url: "/api/Product" });
-      setloading(false);
+    if (!open) return;
 
-      setProds(products || []);
-      // Set initial values after products are loaded
-      if (products && products.length > 0) {
-        const initialValues = FirstFields.reduce((acc, field) => {
-          if (field.type === "image" || field.accessor === "image") {
-            acc[field.accessor] = null;
-          } else if (field.type === "select") {
-            acc[field.accessor] = field.options?.[0] || "";
-          } else {
-            acc[field.accessor] = "";
-          }
-          if (field.accessor === "productId") {
-            acc[field.accessor] = products[0].id || "";
-          }
-          return acc;
-        }, {});
-        setValues(initialValues);
-        setprod(products[0]);
-      }
+    const load = async () => {
+      setLoading(true);
+
+      const prods = await fetchData({ method: "GET", url: "/api/Product" });
+      const users = await fetchData({
+        method: "GET",
+        url: "/api/users?email=" + encodeURIComponent(session.user.email),
+      });
+
+      setProducts(prods || []);
+      setClients(users || []);
+
+      const firstProduct = prods?.[0] || null;
+
+      setValues((prev) => ({
+        ...prev,
+        productId: firstProduct?.id || "",
+        compteId: users?.[0]?.id || "",
+        total: firstProduct ? firstProduct.prix * prev.quantite : 0,
+      }));
+
+      setSelectedProduct(firstProduct);
+
+      setLoading(false);
     };
-    fetchProducts();
-    // eslint-disable-next-line
-  }, []);
 
-  // Update emballages when product changes
-  useEffect(() => {
-    const filteredEmballages = prod?.emballages ? prod.emballages : [];
-    setemballages(filteredEmballages);
-  }, [values.productId, prod]);
+    load();
+  }, [open]);
 
+  /** HANDLE INPUTS **/
   const handleChange = (e) => {
-    const { name, value, type, files } = e.target;
-    if (type === "file") {
-      setValues({ ...values, [name]: files[0] });
-    } else {
-      setValues({ ...values, [name]: value });
-      if (name === "productId") {
-        const selectedProduct = prods.find(
-          (p) => Number(p.id) === Number(value)
-        );
-        setprod(selectedProduct);
-      }
+    const { name, value } = e.target;
+
+    let newValues = { ...values, [name]: value };
+
+    // IF PRODUCT CHANGED → UPDATE PRODUCT + TOTAL
+    if (name === "productId") {
+      const prod = products.find((p) => p.id === Number(value));
+      setSelectedProduct(prod);
+      newValues.emballage = prod.emballages?.[0]?.name || "";
+
+      newValues.total = prod.prix * Number(values.quantite);
     }
+
+    // IF QUANTITY CHANGED → RECALCUL TOTAL
+    if (name === "quantite") {
+      const qty = Number(value);
+      const prix = selectedProduct?.prix || 0;
+
+      newValues.total = prix * qty;
+    }
+
+    setValues(newValues);
   };
 
-  const onSubmit = async (values) => {
-    setloading(true);
+  /** SUBMIT **/
+  const onSubmit = async () => {
+    setLoading(true);
 
     await fetchData({
       method: "POST",
       url: "/api/Commande",
       body: values,
     });
-    setloading(false);
 
+    setLoading(false);
     loadData();
     onClose();
   };
 
   if (!open) return null;
-  if (!prods.length)
-    return <div className="p-8 text-center text-gray-500">Chargement...</div>;
 
   return (
     <>
-      {isloading && <LoadingPage isVisible={true} />}
-      <div className="fixed inset-0 z-50 flex items-center justify-center px-4 sm:px-6 md:px-10 py-6 backdrop-blur-sm">
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-300 w-full max-w-3xl p-6 sm:p-8 relative overflow-y-auto max-h-[95vh]">
-          {/* Close Button */}
+      {isLoading && <LoadingPage isVisible={true} />}
+
+      {/* BACKDROP */}
+      <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"></div>
+
+      {/* MODAL */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn">
+        <div className="bg-white w-full max-w-3xl p-6 rounded-2xl shadow-xl relative animate-scaleIn max-h-[90vh] overflow-y-auto">
           <button
-            onClick={onClose}
             className="absolute top-4 right-4 text-gray-500 hover:text-black text-2xl"
-            aria-label="Close"
+            onClick={onClose}
           >
-            &times;
+            ×
           </button>
 
-          {/* Title */}
-          <h1 className="text-xl sm:text-2xl font-bold mb-6 text-center">
-            {Title}
+          <h1 className="text-2xl font-bold text-center mb-6">
+            Ajouter Commande
           </h1>
 
-          {/* Form */}
+          {/* PRODUCT IMAGE */}
+          {selectedProduct && (
+            <div className="flex justify-center mb-4">
+              <img
+                src={selectedProduct.image}
+                alt={selectedProduct.title}
+                className="w-40 h-40 object-contain rounded-xl shadow"
+              />
+            </div>
+          )}
+
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              onSubmit(values);
+              onSubmit();
             }}
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {FirstFields?.map((field) => {
-                if (field.accessor === "productId") {
-                  return (
-                    <div key={field.accessor}>
-                      <label
-                        htmlFor={field.accessor}
-                        className="block text-gray-700 font-medium mb-1"
-                      >
-                        {field.label}
-                      </label>
-                      <select
-                        id={field.accessor}
-                        name={field.accessor}
-                        value={values[field.accessor]}
-                        onChange={handleChange}
-                        required={field.required}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black"
-                      >
-                        {prods.map((opt) => (
-                          <option key={opt.id} value={opt.id}>
-                            {opt.title}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  );
-                }
-                if (field.type === "select" && field.accessor === "region") {
-                  return (
-                    <div key={field.accessor}>
-                      <label
-                        htmlFor={field.accessor}
-                        className="block text-gray-700 font-medium mb-1"
-                      >
-                        {field.label}
-                      </label>
-                      <select
-                        id={field.accessor}
-                        name={field.accessor}
-                        value={values[field.accessor]}
-                        onChange={handleChange}
-                        required={field.required}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black"
-                      >
-                        {field.options?.map((opt) => (
-                          <option key={opt} value={opt}>
-                            {opt}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  );
-                }
+              {/* CLIENT */}
+              <div>
+                <label className="block font-medium mb-1">Client</label>
+                <select
+                  name="compteId"
+                  value={values.compteId}
+                  onChange={handleChange}
+                  className="w-full border px-3 py-2 rounded-lg"
+                >
+                  {clients.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.fullName}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-                if (field.type === "image" || field.accessor === "image") {
-                  return (
-                    <div key={field.accessor}>
-                      <label
-                        htmlFor={field.accessor}
-                        className="block text-gray-700 font-medium mb-1"
-                      >
-                        {field.label}
-                      </label>
-                      <input
-                        id={field.accessor}
-                        name={field.accessor}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleChange}
-                        required={field.required}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black"
-                      />
-                    </div>
-                  );
-                }
+              {/* ADRESSE */}
+              <div>
+                <label className="block font-medium mb-1">Adresse</label>
+                <input
+                  type="text"
+                  name="adresse"
+                  value={values.adresse}
+                  onChange={handleChange}
+                  className="w-full border px-3 py-2 rounded-lg"
+                  placeholder="Adresse de livraison"
+                  required
+                />
+              </div>
 
-                // Add emballage select
-                if (field.accessor === "emballage") {
-                  return (
-                    <div key={field.accessor}>
-                      <label
-                        htmlFor={field.accessor}
-                        className="block text-gray-700 font-medium mb-1"
-                      >
-                        Emballage
-                      </label>
-                      <select
-                        id={field.accessor}
-                        name={field.accessor}
-                        value={values[field.accessor] || ""}
-                        onChange={handleChange}
-                        required={field.required}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black"
-                        disabled={!values.productId}
-                      >
-                        <option value="">Select emballage</option>
-                        {emballages?.map((emb) => (
-                          <option key={emb.id} value={emb.name}>
-                            {emb.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  );
-                }
-                return (
-                  <div key={field.accessor}>
-                    <label
-                      htmlFor={field.accessor}
-                      className="block text-gray-700 font-medium mb-1"
-                    >
-                      {field.label}
-                    </label>
-                    <input
-                      id={field.accessor}
-                      name={field.accessor}
-                      type={field.type}
-                      value={values[field.accessor]}
-                      onChange={handleChange}
-                      placeholder={
-                        field.placeholder ||
-                        `Enter ${field.label.toLowerCase()}`
-                      }
-                      required={field.required}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black"
-                    />
-                  </div>
-                );
-              })}
+              {/* PRODUCT */}
+              <div>
+                <label className="block font-medium mb-1">Produit</label>
+                <select
+                  name="productId"
+                  value={values.productId}
+                  onChange={handleChange}
+                  className="w-full border px-3 py-2 rounded-lg"
+                >
+                  {products.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.title} — {p.prix} DA
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* EMBALLAGE */}
+              <div>
+                <label className="block font-medium mb-1">Emballage</label>
+
+                <select
+                  name="emballage"
+                  value={values.emballage}
+                  onChange={handleChange}
+                  className="w-full border px-3 py-2 rounded-lg"
+                  required
+                >
+                  <option value="">-- Choisir un emballage --</option>
+
+                  {selectedProduct?.emballages?.length > 0 ? (
+                    selectedProduct.emballages.map((emb) => (
+                      <option key={emb.id} value={emb.name}>
+                        {emb.name}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="">Aucun emballage disponible</option>
+                  )}
+                </select>
+              </div>
+
+              {/* QUANTITE */}
+              <div>
+                <label className="block font-medium mb-1">Quantité</label>
+                <input
+                  type="number"
+                  min="1"
+                  name="quantite"
+                  value={values.quantite}
+                  onChange={handleChange}
+                  className="w-full border px-3 py-2 rounded-lg"
+                  required
+                />
+              </div>
+
+              {/* PRIX */}
+              <div>
+                <label className="block font-medium mb-1">Prix unitaire</label>
+                <div className="p-2 border rounded-lg bg-gray-50">
+                  {selectedProduct?.prix || 0} DA
+                </div>
+              </div>
+
+              {/* TOTAL */}
+              <div>
+                <label className="block font-medium mb-1">Total</label>
+                <div className="p-2 border rounded-lg bg-green-50 font-bold">
+                  {values.total} DA
+                </div>
+              </div>
             </div>
 
             <button
               type="submit"
-              className="mt-6 w-full bg-black text-white py-2 px-4 rounded-lg shadow hover:bg-white hover:text-black border border-black transition"
+              className="mt-6 w-full bg-black text-white py-2 rounded-lg shadow hover:bg-white hover:text-black border border-black transition"
             >
-              {labels.Next}
+              Ajouter
             </button>
           </form>
         </div>
       </div>
+
+      {/* Animations */}
+      <style jsx>{`
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+        .animate-scaleIn {
+          animation: scaleIn 0.25s ease-out;
+        }
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        @keyframes scaleIn {
+          from {
+            transform: scale(0.92);
+            opacity: 0;
+          }
+          to {
+            transform: scale(1);
+            opacity: 1;
+          }
+        }
+      `}</style>
     </>
   );
-};
-
-export default AddModal;
+}

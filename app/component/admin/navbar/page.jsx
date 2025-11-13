@@ -11,21 +11,28 @@ import {
   NavigationMenuItem,
   NavigationMenuList,
 } from "@/components/ui/navigation-menu";
-import { useSession, signOut, signIn } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Progression from "@/app/component/Proogression/page";
 
 const TEXTS = {
   brandName: "Ski agrotour luxe",
-  navItems: [
+
+  // 🔥 Menu Admin
+  navItemsAdmin: [
     { label: "Products", href: "/admin/products" },
     { label: "Commandes", href: "/admin/commande" },
     { label: "Farms", href: "/admin/farms" },
     { label: "Users", href: "/admin/Users" },
-    { label: "Client", href: "/admin/Users" },
-
     { label: "Paramètre", href: "/admin/parametre" },
   ],
+
+  // 🔥 Menu Client
+  navItemsClient: [
+    { label: "Client", href: "/admin/Users" },
+    { label: "Paramètre", href: "/admin/parametre" },
+  ],
+
   login: "Login",
   logout: "Logout",
 };
@@ -33,9 +40,18 @@ const TEXTS = {
 export default function AppNavbar({ onNavChange, currentPage }) {
   const [open, setOpen] = React.useState(false);
   const { data: session, status } = useSession();
+  const [navs, setNavs] = React.useState([]);
   const [isLoading, setIsLoading] = React.useState(false);
-
   const router = useRouter();
+
+  // 👉 Set correct menu based on role
+  React.useEffect(() => {
+    const role = session?.user?.role;
+    const navItems =
+      role === "ADMIN" ? TEXTS.navItemsAdmin : TEXTS.navItemsClient;
+
+    setNavs(navItems);
+  }, [session]);
 
   const handleLogout = () => {
     Swal.fire({
@@ -49,7 +65,6 @@ export default function AppNavbar({ onNavChange, currentPage }) {
     }).then((result) => {
       if (result.isConfirmed) {
         setIsLoading(true);
-
         signOut({ callbackUrl: "/" });
       }
     });
@@ -58,6 +73,7 @@ export default function AppNavbar({ onNavChange, currentPage }) {
   return (
     <>
       {isLoading && <Progression isVisible={true} />}
+
       <header className="bg-white text-black shadow-sm px-6 py-4 z-50 ">
         <div className="flex items-center justify-between">
           {/* Logo and Brand */}
@@ -80,22 +96,21 @@ export default function AppNavbar({ onNavChange, currentPage }) {
                 type="button"
                 onClick={() => {
                   setIsLoading(true);
-                  router.push("/"); // 👉 Smooth Next.js navigation to racine
+                  router.push("/");
                 }}
-                className={
-                  "text-sm font-medium transition text-black bg-transparent"
-                }
+                className="text-sm font-medium text-black bg-transparent"
               >
                 Home
               </button>
-              {TEXTS.navItems.map((item) => (
+
+              {navs?.map((item) => (
                 <NavigationMenuItem key={item.label}>
                   <button
                     type="button"
                     onClick={() => onNavChange(item.label)}
                     className={`text-sm font-medium ${
                       currentPage === item.label
-                        ? "text-white bg-black font-bold  rounded-2xl w-24 h-9"
+                        ? "text-white bg-black font-bold rounded-2xl w-24 h-9"
                         : "text-black"
                     }`}
                   >
@@ -118,17 +133,13 @@ export default function AppNavbar({ onNavChange, currentPage }) {
                 {TEXTS.logout}
               </Button>
             ) : (
-              <Button
-                asChild
-                variant="default"
-                className="bg-black hover:bg-gray-700"
-              >
+              <Button asChild className="bg-black hover:bg-gray-700">
                 <Link href="/Login">{TEXTS.login}</Link>
               </Button>
             )}
           </div>
 
-          {/* Mobile Menu Trigger */}
+          {/* Mobile Menu */}
           <div className="sm:hidden">
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
@@ -143,15 +154,16 @@ export default function AppNavbar({ onNavChange, currentPage }) {
                     type="button"
                     onClick={() => {
                       setIsLoading(true);
-                      router.push("/"); // 👉 Smooth Next.js navigation to racine
+                      setOpen(false);
+                      router.push("/");
                     }}
-                    className={
-                      "text-sm font-medium transition text-black bg-transparent"
-                    }
+                    className="text-sm font-medium text-black"
                   >
                     Home
                   </button>
-                  {TEXTS.navItems.map((item) => (
+
+                  {/* 👉 MOBILE MENU FIXED HERE */}
+                  {navs?.map((item) => (
                     <button
                       key={item.label}
                       type="button"
@@ -159,20 +171,19 @@ export default function AppNavbar({ onNavChange, currentPage }) {
                         onNavChange(item.label);
                         setOpen(false);
                       }}
-                      className={`text-sm font-medium transition ${
+                      className={`text-sm font-medium ${
                         currentPage === item.label
                           ? "text-white bg-black font-bold rounded-2xl p-2 h-9"
-                          : "text-black bg-transparent"
+                          : "text-black"
                       }`}
                     >
                       {item.label}
                     </button>
                   ))}
+
                   {session ? (
                     <Button
                       onClick={() => {
-                        setIsLoading(true);
-
                         setOpen(false);
                         handleLogout();
                       }}

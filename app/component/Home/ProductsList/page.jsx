@@ -4,7 +4,10 @@ import { useRef, useState, useEffect } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
-
+import { useSession } from "next-auth/react";
+import Swal from "sweetalert2";
+import { useRouter } from "next/navigation";
+import ProductOrderModal from "@/app/component/Home/AddToCommande/page";
 // ===== 🎨 Style & Text Variables =====
 const COLORS = {
   background: "bg-gray-100",
@@ -31,6 +34,11 @@ export default function HomePage() {
   const [products, setProducts] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(3);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [commandes, setCommandes] = useState([]);
+  const { data: session } = useSession();
+  const router = useRouter();
+
   const isManualScroll = useRef(false);
   const timeoutRef = useRef(null);
 
@@ -96,11 +104,121 @@ export default function HomePage() {
       clearTimeout(timeoutRef.current);
     };
   }, [currentPage, itemsPerPage]);
+  const handleOrder = (product) => {
+    // ➤ Ici tu fais ce que tu veux : ouvrir modal, redirection, WhatsApp, panier…
+    alert("Commande du produit : " + JSON.stringify(product));
+    setSelectedProduct(product);
+  };
+  const handleConfirmOrder = async (orderData) => {
+    // If no user → show alert + redirect
+    if (!session || !session.user) {
+      localStorage.setItem("pendingOrder", JSON.stringify(orderData));
+
+      Swal.fire({
+        icon: "warning",
+        title: "You must be logged in",
+        text: "Please log in to complete your order.",
+        confirmButtonText: "Go to Login",
+      }).then(() => {
+        router.push("/Login");
+      });
+      return;
+    }
+
+    // ============================
+    // 🔍 Validate required fields
+    // ============================
+    if (!orderData.address || orderData.address.trim() === "") {
+      return Swal.fire({
+        icon: "warning",
+        title: "Missing Address",
+        text: "Please enter your delivery address.",
+      });
+    }
+
+    if (!orderData.packagingId) {
+      return Swal.fire({
+        icon: "warning",
+        title: "Select Packaging",
+        text: "Please choose a packaging option.",
+      });
+    }
+
+    if (!orderData.quantity || orderData.quantity < 1) {
+      return Swal.fire({
+        icon: "warning",
+        title: "Invalid Quantity",
+        text: "Quantity must be at least 1.",
+      });
+    }
+
+    if (!orderData.productId) {
+      return Swal.fire({
+        icon: "warning",
+        title: "Product Error",
+        text: "No product selected. Please try again.",
+      });
+    }
+
+    // ------------------------------
+    // Prepare the payload for the API
+    // ------------------------------
+    const payload = {
+      adresse: orderData.address,
+      emballage: orderData.packagingId,
+      quantite: orderData.quantity,
+      productId: orderData.productId,
+      compteId: session.user.id,
+      status: false,
+    };
+
+    try {
+      const res = await fetch("/api/Commande", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to send order");
+      }
+
+      const result = await res.json();
+
+      // Success popup
+      Swal.fire({
+        icon: "success",
+        title: "Order Confirmed!",
+        text: "Your order has been created successfully.",
+        confirmButtonColor: "#3085d6",
+      });
+
+      setCommandes((prev) => [...prev, result]);
+      setSelectedProduct(null);
+    } catch (error) {
+      console.error("Order error:", error);
+
+      // Error popup
+      Swal.fire({
+        icon: "error",
+        title: "Order Failed",
+        text: "Something went wrong while creating your order.",
+      });
+    }
+  };
 
   return (
     <main
       className={`min-h-screen ${COLORS.background} flex items-center justify-center p-4 sm:p-6`}
     >
+      {selectedProduct && (
+        <ProductOrderModal
+          product={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+          onConfirm={handleConfirmOrder}
+        />
+      )}
+
       <div className="w-full max-w-7xl overflow-x-hidden bg-white rounded-3xl shadow-lg p-4 sm:p-8">
         <motion.h1
           initial={{ opacity: 0, x: -80 }}
@@ -190,11 +308,20 @@ export default function HomePage() {
                         {product.desc}
                       </div>
                     </div>
+
                     <div className="p-4">
                       <h2 className="text-lg font-semibold text-gray-800">
                         {product.title}
                       </h2>
                       <p className="text-gray-500">{product.prix} DA</p>
+
+                      {/* ===== Bouton Commander ===== */}
+                      <button
+                        onClick={() => handleOrder(product)}
+                        className="mt-3 w-full bg-gray-800 text-white py-2 rounded-xl hover:bg-gray-700 transition"
+                      >
+                        Order Now
+                      </button>
                     </div>
                   </motion.div>
                 ))}
