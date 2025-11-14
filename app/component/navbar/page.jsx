@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
-import { User, LogOut, Menu, X } from "lucide-react";
+import { LayoutDashboard, LogOut, Menu, X } from "lucide-react";
 import Progression from "@/app/component/Proogression/page";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -38,7 +38,7 @@ const TEXTS = {
   ],
   login: "Login",
   logout: "Logout",
-  Admin: "admin",
+  Admin: "DashBoard",
 };
 
 export default function AppNavbar({
@@ -142,7 +142,7 @@ export default function AppNavbar({
                     variant="outline"
                     className="font-semibold bg-black text-white hover:bg-gray-700 transition"
                   >
-                    Admin
+                    DashBoard
                   </Button>
                 </DropdownMenuTrigger>
 
@@ -158,7 +158,7 @@ export default function AppNavbar({
                     }}
                     className="flex items-center gap-2 text-black font-medium hover:bg-gray-100 px-3 py-2 rounded-lg cursor-pointer"
                   >
-                    <User className="w-4 h-4 text-black" />
+                    <LayoutDashboard className="w-4 h-4 text-black" />
                     <span>{TEXTS.Admin}</span>
                   </DropdownMenuItem>
 

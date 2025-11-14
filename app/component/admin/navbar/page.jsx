@@ -29,7 +29,7 @@ const TEXTS = {
 
   // 🔥 Menu Client
   navItemsClient: [
-    { label: "Client", href: "/admin/Users" },
+    { label: "Order", href: "/admin/Users" },
     { label: "Paramètre", href: "/admin/parametre" },
   ],
 

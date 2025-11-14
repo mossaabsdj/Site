@@ -63,7 +63,7 @@ export default function Admin() {
       {currentPage === "Farms" && <FarmsPage />}
       {currentPage === "Paramètre" && <ParametrePage />}
       {currentPage === "Users" && <UserManagement />}
-      {currentPage === "Client" && <ClientCommandes />}
+      {currentPage === "Order" && <ClientCommandes />}
 
       <Footer />
     </>

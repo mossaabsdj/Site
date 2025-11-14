@@ -14,6 +14,7 @@ import {
   PackageCheck,
 } from "lucide-react";
 import Swal from "sweetalert2";
+import AddOrder from "@/app/component/admin/Client/AddCommande/modal";
 import {
   Dialog,
   DialogContent,
@@ -88,13 +89,14 @@ export default function CommandesPage() {
   // 🧩 Fetch commandes from API
   const fetchCommandes = async () => {
     try {
-      const res = await fetch("/api/Commande");
+      const userEmail = session?.user?.email;
+
+      const res = await fetch(`/api/Commande/Client?email=${userEmail}`);
       const data = await res.json();
       if (res.ok) {
         // Filter only the current user's commandes
-        const userEmail = session?.user?.email;
-        const filtered = data.filter((c) => c.compte?.email === userEmail);
-        setCommandes(filtered);
+        //  const filtered = data.filter((c) => c.compte?.email === userEmail);
+        setCommandes(data);
       } else {
         Swal.fire("Error", data.error || "Failed to load orders", "error");
       }
@@ -171,6 +173,16 @@ export default function CommandesPage() {
   );
 
   const getStatusConfig = (status) => {
+    // Map numeric/null to English keys
+    const mappedStatus =
+      status === false
+        ? "PENDING"
+        : status === true
+        ? "CONFIRMED"
+        : status === null
+        ? "PENDING"
+        : "PENDING";
+
     const configs = {
       PENDING: { label: TEXT.PENDING, color: "bg-yellow-100 text-yellow-800" },
       CONFIRMED: { label: TEXT.CONFIRMED, color: "bg-blue-100 text-blue-800" },
@@ -184,7 +196,8 @@ export default function CommandesPage() {
       },
       CANCELLED: { label: TEXT.CANCELLED, color: "bg-red-100 text-red-800" },
     };
-    return configs[status] || configs.PENDING;
+
+    return configs[mappedStatus] || configs.PENDING;
   };
 
   const formatCurrency = (amount) =>
@@ -265,23 +278,6 @@ export default function CommandesPage() {
                         size="sm"
                         variant="outline"
                         onClick={() => {
-                          setCurrentCommande(cmd);
-                          setFormData({
-                            adresse: cmd.adresse,
-                            emballage: cmd.emballage,
-                            quantite: cmd.quantite,
-                            status: cmd.status,
-                            productId: cmd.productId,
-                          });
-                          setIsDialogOpen(true);
-                        }}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
                           setCommandeToDelete(cmd);
                           setIsDeleteDialogOpen(true);
                         }}
@@ -306,9 +302,14 @@ export default function CommandesPage() {
             </h3>
           </div>
         )}
-
-        {/* Add/Edit Dialog */}
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <AddOrder
+          open={isDialogOpen}
+          compteId={session?.user?.id}
+          onClose={() => setIsDialogOpen(false)}
+          loadData={fetchCommandes}
+        />
+        {/* Add/Edit Dialog 
+         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="bg-white sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>
@@ -386,6 +387,7 @@ export default function CommandesPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        */}
 
         {/* Delete Dialog */}
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

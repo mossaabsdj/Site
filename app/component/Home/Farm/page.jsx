@@ -1,5 +1,9 @@
 "use client";
 import { Skeleton } from "@/components/ui/skeleton"; // if you use shadcn/ui
+import ProductOrderModal from "@/app/component/Home/AddToCommande/page";
+import { useSession } from "next-auth/react";
+import Swal from "sweetalert2";
+import { useRouter } from "next/navigation";
 
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,10 +23,116 @@ const CheesePage = forwardRef(({ FarmData }, refCommande) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true); // 1. Add loading state
   // Add image loading states
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const { data: session } = useSession();
+  const router = useRouter();
+
   const [heroImgLoaded, setHeroImgLoaded] = useState(false);
   const [cateringImgLoaded, setCateringImgLoaded] = useState(false);
   const [bungalowImgLoaded, setBungalowImgLoaded] = useState(false);
   const [imgLoadedMap, setImgLoadedMap] = useState({});
+  const handleOrder = (product) => {
+    // ➤ Ici tu fais ce que tu veux : ouvrir modal, redirection, WhatsApp, panier…
+    //  alert("Commande du produit : " + JSON.stringify(product));
+    setSelectedProduct(product);
+  };
+  const handleConfirmOrder = async (orderData) => {
+    // If no user → show alert + redirect
+    if (!session || !session.user) {
+      localStorage.setItem("pendingOrder", JSON.stringify(orderData));
+
+      Swal.fire({
+        icon: "warning",
+        title: "You must be logged in",
+        text: "Please log in to complete your order.",
+        confirmButtonText: "Go to Login",
+      }).then(() => {
+        router.push("/Login");
+      });
+      return;
+    }
+
+    // ============================
+    // 🔍 Validate required fields
+    // ============================
+    if (!orderData.address || orderData.address.trim() === "") {
+      return Swal.fire({
+        icon: "warning",
+        title: "Missing Address",
+        text: "Please enter your delivery address.",
+      });
+    }
+
+    if (!orderData.packagingId) {
+      return Swal.fire({
+        icon: "warning",
+        title: "Select Packaging",
+        text: "Please choose a packaging option.",
+      });
+    }
+
+    if (!orderData.quantity || orderData.quantity < 1) {
+      return Swal.fire({
+        icon: "warning",
+        title: "Invalid Quantity",
+        text: "Quantity must be at least 1.",
+      });
+    }
+
+    if (!orderData.productId) {
+      return Swal.fire({
+        icon: "warning",
+        title: "Product Error",
+        text: "No product selected. Please try again.",
+      });
+    }
+
+    // ------------------------------
+    // Prepare the payload for the API
+    // ------------------------------
+    const payload = {
+      adresse: orderData.address,
+      emballage: orderData.packagingId,
+      quantite: orderData.quantity,
+      productId: orderData.productId,
+      compteId: session.user.id,
+      status: null,
+    };
+
+    try {
+      const res = await fetch("/api/Commande", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to send order");
+      }
+
+      const result = await res.json();
+
+      // Success popup
+      Swal.fire({
+        icon: "success",
+        title: "Order Confirmed!",
+        text: "Your order has been created successfully.",
+        confirmButtonColor: "#3085d6",
+      });
+
+      //  setCommandes((prev) => [...prev, result]);
+      setSelectedProduct(null);
+    } catch (error) {
+      console.error("Order error:", error);
+
+      // Error popup
+      Swal.fire({
+        icon: "error",
+        title: "Order Failed",
+        text: "Something went wrong while creating your order.",
+      });
+    }
+  };
 
   const scrollByCard = (direction = 1) => {
     const container = scrollerRef.current;
@@ -102,6 +212,13 @@ const CheesePage = forwardRef(({ FarmData }, refCommande) => {
 
   return (
     <>
+      {selectedProduct && (
+        <ProductOrderModal
+          product={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+          onConfirm={handleConfirmOrder}
+        />
+      )}
       <ProgressPage isVisible={!heroImgLoaded} />
       <div className="min-h-screen bg-gray-50 flex flex-col items-center py-10 px-0   overflow-hidden snap-y snap-mandatory">
         {/* Hero Section */}
@@ -251,6 +368,13 @@ const CheesePage = forwardRef(({ FarmData }, refCommande) => {
                         <span className="text-green-700 font-semibold text-lg">
                           {product.prix} DA
                         </span>
+                        {/* ===== Bouton Commander ===== */}
+                        <button
+                          onClick={() => handleOrder(product)}
+                          className="mt-3 w-full bg-gray-800 text-white py-2 rounded-xl hover:bg-gray-700 transition"
+                        >
+                          Order Now
+                        </button>
                       </CardContent>
                     </div>
                   ))
@@ -360,8 +484,9 @@ const CheesePage = forwardRef(({ FarmData }, refCommande) => {
           </Card>
         </motion.div>
 
-        {/* Commande Section */}
-        <motion.div
+        {/* Commande Section
+        
+          <motion.div
           initial={{ opacity: 0, y: 100 }}
           whileInView={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 100 }} // <-- add this line
@@ -372,10 +497,8 @@ const CheesePage = forwardRef(({ FarmData }, refCommande) => {
           <div
             ref={refCommande}
             className="scroll-mt-34" // Tailwind utility
-          >
-            <Commande data={data} FarmProduct={products} />
-          </div>
-        </motion.div>
+          ></div>
+        </motion.div>*/}
       </div>
     </>
   );

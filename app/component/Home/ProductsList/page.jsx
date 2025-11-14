@@ -106,7 +106,7 @@ export default function HomePage() {
   }, [currentPage, itemsPerPage]);
   const handleOrder = (product) => {
     // ➤ Ici tu fais ce que tu veux : ouvrir modal, redirection, WhatsApp, panier…
-    alert("Commande du produit : " + JSON.stringify(product));
+    //alert("Commande du produit : " + JSON.stringify(product));
     setSelectedProduct(product);
   };
   const handleConfirmOrder = async (orderData) => {
@@ -169,7 +169,7 @@ export default function HomePage() {
       quantite: orderData.quantity,
       productId: orderData.productId,
       compteId: session.user.id,
-      status: false,
+      status: null,
     };
 
     try {

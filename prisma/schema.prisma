@@ -34,9 +34,7 @@ model Compte {
   Password  String
   role      Role      @default(CLIENT)
   createdAt DateTime  @default(now())
-    commandes  Commande[]
-   
-
+  commandes  Commande[]   
 }
 model Farm {
   id          Int           @id @default(autoincrement())
@@ -68,8 +66,8 @@ model Commande {
   quantite   Int
   product    Product  @relation(fields: [productId], references: [id])
   productId  Int
-    compte      Compte     @relation(fields: [compteId], references: [id])
+  compte      Compte     @relation(fields: [compteId], references: [id])
   compteId    Int
-status Boolean? 
+  status Boolean? 
   Date  DateTime @default(now())
 }

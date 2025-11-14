@@ -22,7 +22,7 @@ export async function POST(req) {
       );
     }
 
-    const existingUser = await prisma.Compte.findUnique({ where: { email } });
+    const existingUser = await prisma.compte.findUnique({ where: { email } });
     if (existingUser) {
       return new Response(
         JSON.stringify({ message: "Email already registered" }),
@@ -32,13 +32,12 @@ export async function POST(req) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await prisma.Compte.create({
+    await prisma.compte.create({
       data: {
         fullName,
         email,
         phone,
         country,
-        User: email,
         Password: hashedPassword,
       },
     });

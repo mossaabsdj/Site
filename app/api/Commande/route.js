@@ -53,7 +53,7 @@ export async function POST(req) {
         adresse: body.adresse,
         emballage: body.emballage,
         quantite: parseInt(body.quantite),
-        status: body.status || false,
+        status: body.status,
         product: { connect: { id: parseInt(body.productId) } },
         compte: { connect: { id: parseInt(body.compteId) } },
       },
